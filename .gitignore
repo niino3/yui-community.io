@@ -3,3 +3,7 @@ dist
 .DS_Store
 *.local
 .vercel
+.env
+contracts/artifacts
+contracts/cache
+contracts/typechain-types
