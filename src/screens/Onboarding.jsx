@@ -3,6 +3,12 @@ import { ChevronRight, CheckCircle } from 'lucide-react'
 
 const tutorialSteps = [
   {
+    icon: '⛓️',
+    title: 'ブロックチェーンで動く',
+    description: '最先端のブロックチェーン基盤を採用。すべての貢献記録・トークン取引が改ざん不可能な形で安全に記録されます。難しい操作は一切不要です。',
+    color: 'bg-purple-100',
+  },
+  {
     icon: '📋',
     title: 'お手伝いを探す',
     description: '掲示板から近くの農作業を探して応募。マッチングされたらTOKENがもらえます。',
@@ -188,15 +194,28 @@ export default function Onboarding({ navigate }) {
         </div>
 
         <h1 className="text-4xl font-black text-gray-800 mb-2">yui</h1>
-        <p className="text-sm text-gray-600 mb-1">農のある生活 × コミュニティトークン</p>
+        <p className="text-sm text-gray-600 mb-1">農のある生活 × ブロックチェーン</p>
         <p className="text-xs text-gray-400 leading-relaxed mt-2">
-          「お互い様」をトークン化する。<br />
+          ブロックチェーン技術で「お互い様」をトークン化。<br />
           農作業・農産物・環境貢献を、<br />
           信頼と価値に変えるプラットフォーム。
         </p>
 
+        {/* Tech badges */}
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <span className="bg-purple-50 text-purple-600 text-[10px] font-bold px-2.5 py-1 rounded-full border border-purple-100">
+            ⛓️ Blockchain
+          </span>
+          <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100">
+            🪙 SBT / Token
+          </span>
+          <span className="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-100">
+            🏛️ DAO
+          </span>
+        </div>
+
         {/* Feature pills */}
-        <div className="flex flex-wrap justify-center gap-2 mt-6">
+        <div className="flex flex-wrap justify-center gap-2 mt-3">
           {['農作業マッチング', 'QR決済', 'Earth Care', '農機具シェア'].map(f => (
             <span key={f} className="bg-primary-50 text-primary-600 text-xs font-bold px-3 py-1 rounded-full border border-primary-100">
               {f}
