@@ -3,11 +3,21 @@ import { MapPin, Calendar, Clock, ChevronRight, CheckCircle } from 'lucide-react
 import Header from '../components/Header'
 import { tasks } from '../data/mockData'
 
+const categoryLabelsMap = { people_care: 'お手伝い', earth_care: 'Earth Care' }
+
 export default function TaskDetail({ goBack, navigate, params }) {
   const [applied, setApplied] = useState(false)
   const [showApplicants, setShowApplicants] = useState(false)
 
-  const task = tasks.find(t => t.id === params?.taskId) || tasks[0]
+  const rawTask = params?.task ?? tasks.find(t => t.id === params?.taskId) ?? tasks[0]
+  const task = {
+    ...rawTask,
+    dateLabel: rawTask.dateLabel ?? (rawTask.created_at ? new Date(rawTask.created_at).toLocaleDateString('ja-JP') : '募集中'),
+    location: rawTask.location ?? 'コミュニティ',
+    distance: rawTask.distance ?? '',
+    reviews: rawTask.reviews ?? [],
+    applicants: rawTask.applicants ?? [],
+  }
   const isRequester = false // mock: viewing as worker
 
   function handleApply() {
@@ -22,21 +32,20 @@ export default function TaskDetail({ goBack, navigate, params }) {
         {/* Hero */}
         <div className="bg-gradient-to-b from-primary-50 to-[#faf8f4] px-5 pt-4 pb-5">
           <div className="flex items-start gap-3 mb-3">
-            <span className="text-4xl">{task.requester.avatar}</span>
+            <span className="text-4xl">{task.requester?.avatar ?? '👤'}</span>
             <div>
               <p className="text-xs text-gray-500">依頼者</p>
-              <p className="text-base font-bold text-gray-800">{task.requester.name}</p>
+              <p className="text-base font-bold text-gray-800">{task.requester?.display_name ?? task.requester?.name}</p>
               <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span>⭐ {task.requester.rating}</span>
-                <span>·</span>
-                <span>依頼 {task.requester.transactionCount}回</span>
+                {task.requester?.rating && <><span>⭐ {task.requester.rating}</span><span>·</span></>}
+                {task.requester?.transactionCount != null && <span>依頼 {task.requester.transactionCount}回</span>}
               </div>
             </div>
           </div>
 
           <h2 className="text-xl font-black text-gray-800 mb-1">{task.title}</h2>
           <div className="flex items-center gap-2">
-            <span className="bg-primary-100 text-primary-700 text-xs font-bold px-2 py-0.5 rounded-full">{task.type}</span>
+            <span className="bg-primary-100 text-primary-700 text-xs font-bold px-2 py-0.5 rounded-full">{categoryLabelsMap[task.category] ?? task.type}</span>
             {task.skillLevel === 'beginner' && (
               <span className="bg-emerald-50 text-emerald-600 text-xs px-2 py-0.5 rounded-full border border-emerald-200">未経験OK</span>
             )}
@@ -48,7 +57,7 @@ export default function TaskDetail({ goBack, navigate, params }) {
           <div className="card p-4 flex items-center justify-between">
             <span className="text-sm font-bold text-gray-700">報酬</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-black text-token-600">{task.reward}</span>
+              <span className="text-3xl font-black text-token-600">{task.token_reward ?? task.reward}</span>
               <span className="text-sm font-bold text-token-500">TOKEN</span>
             </div>
           </div>
@@ -68,7 +77,7 @@ export default function TaskDetail({ goBack, navigate, params }) {
               <div>
                 <p className="text-xs text-gray-500">場所</p>
                 <p className="text-sm font-bold text-gray-800">{task.location}</p>
-                <p className="text-xs text-primary-500 mt-0.5">現在地から {task.distance}</p>
+                {task.distance && <p className="text-xs text-primary-500 mt-0.5">現在地から {task.distance}</p>}
               </div>
             </div>
           </div>
@@ -163,7 +172,7 @@ export default function TaskDetail({ goBack, navigate, params }) {
             </div>
           ) : (
             <button onClick={handleApply} className="btn-primary">
-              応募する — {task.reward} TOKEN もらえます
+              応募する — {task.token_reward ?? task.reward} TOKEN もらえます
             </button>
           )}
         </div>

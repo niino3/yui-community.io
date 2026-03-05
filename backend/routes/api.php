@@ -2,7 +2,12 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TaskController;
+use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/communities', function () {
+    return response()->json(\App\Models\Community::select('id', 'name', 'slug', 'token_symbol', 'contract_address', 'sbt_contract_address')->get());
+});
 
 Route::get('/health', function () {
     return response()->json([
@@ -27,4 +32,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/tasks/{task}/assign', [TaskController::class, 'assign']);
     Route::patch('/tasks/{task}/complete', [TaskController::class, 'complete']);
     Route::patch('/tasks/{task}/approve', [TaskController::class, 'approve']);
+
+    Route::get('/transactions', [TransactionController::class, 'index']);
 });

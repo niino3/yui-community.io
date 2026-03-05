@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'chain_id' => (int) env('CHAIN_ID', 80002), // Polygon Amoy
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

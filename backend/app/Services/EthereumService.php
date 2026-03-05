@@ -34,7 +34,7 @@ class EthereumService
             '',
             "URI: {$uri}",
             'Version: 1',
-            "Chain ID: 137",
+            "Chain ID: " . config('app.chain_id', 80002),
             "Nonce: {$nonce}",
             "Issued At: {$issuedAt}",
         ]);

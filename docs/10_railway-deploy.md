@@ -34,6 +34,7 @@
 | `CACHE_STORE` | `redis` |
 | `QUEUE_CONNECTION` | `redis` |
 | `RAILWAY_HEALTHCHECK_TIMEOUT_SEC` | `120`（推奨: migrate 完了まで余裕を持たせる） |
+| `CORS_ALLOWED_ORIGINS` | フロントエンドのオリジン（例: `https://yui-community-io.vercel.app,http://localhost:5173`） |
 
 ## 4. 参照変数の追加
 

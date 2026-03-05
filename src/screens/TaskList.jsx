@@ -2,18 +2,28 @@ import { useState } from 'react'
 import { SlidersHorizontal, MapPin } from 'lucide-react'
 import Header from '../components/Header'
 import TaskCard from '../components/TaskCard'
-import { tasks } from '../data/mockData'
+import { useTasks } from '../hooks/useTasks'
+import { useAuth } from '../context/AuthContext'
+import { tasks as mockTasks } from '../data/mockData'
 
-const filters = ['すべて', '草取り', '収穫', '種まき', '袋詰め', '未経験OK']
+const apiFilters = [
+  { key: 'すべて', value: null },
+  { key: 'お手伝い', value: 'people_care' },
+  { key: 'Earth Care', value: 'earth_care' },
+]
 
 export default function TaskList({ navigate }) {
-  const [activeFilter, setActiveFilter] = useState('すべて')
+  const [activeFilter, setActiveFilter] = useState(null)
   const [viewMode, setViewMode] = useState('list')
+  const { isAuthenticated } = useAuth()
+  const { data: tasksData, isLoading, error } = useTasks(
+    isAuthenticated ? { status: 'open' } : { _skip: true }
+  )
 
+  const tasks = tasksData?.data ?? (isAuthenticated ? [] : mockTasks)
   const filtered = tasks.filter(t => {
-    if (activeFilter === 'すべて') return true
-    if (activeFilter === '未経験OK') return t.skillLevel === 'beginner'
-    return t.type === activeFilter
+    if (activeFilter == null) return true
+    return t.category === activeFilter
   })
 
   return (
@@ -30,17 +40,17 @@ export default function TaskList({ navigate }) {
       {/* Filter bar */}
       <div className="flex-shrink-0 bg-[#faf8f4] px-4 pb-3">
         <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
-          {filters.map(f => (
+          {apiFilters.map(({ key, value }) => (
             <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
+              key={key}
+              onClick={() => setActiveFilter(value)}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
-                activeFilter === f
+                activeFilter === value
                   ? 'bg-primary-500 text-white'
                   : 'bg-white text-gray-600 border border-gray-200'
               }`}
             >
-              {f}
+              {key}
             </button>
           ))}
         </div>
@@ -63,7 +73,11 @@ export default function TaskList({ navigate }) {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {viewMode === 'map' ? (
+        {isLoading ? (
+          <div className="p-4 text-center text-gray-500 text-sm">読み込み中...</div>
+        ) : error ? (
+          <div className="p-4 text-center text-red-500 text-sm">読み込みに失敗しました</div>
+        ) : viewMode === 'map' ? (
           <div className="relative">
             {/* Map placeholder */}
             <div className="h-56 bg-gradient-to-b from-green-100 to-green-200 flex items-center justify-center relative overflow-hidden">
@@ -75,11 +89,11 @@ export default function TaskList({ navigate }) {
               {filtered.map((t, i) => (
                 <button
                   key={t.id}
-                  onClick={() => navigate('task-detail', { taskId: t.id })}
+                  onClick={() => navigate('task-detail', { taskId: t.id, task: t })}
                   className="absolute bg-white rounded-xl shadow-md px-2 py-1 flex items-center gap-1"
                   style={{ top: `${20 + i * 25}%`, left: `${15 + i * 20}%` }}
                 >
-                  <span className="text-xs font-bold text-token-600">{t.reward}</span>
+                  <span className="text-xs font-bold text-token-600">{t.token_reward ?? t.reward}</span>
                   <span className="text-[10px] text-token-500">TOKEN</span>
                 </button>
               ))}
@@ -92,7 +106,7 @@ export default function TaskList({ navigate }) {
                 <TaskCard
                   key={task.id}
                   task={task}
-                  onClick={() => navigate('task-detail', { taskId: task.id })}
+                  onClick={() => navigate('task-detail', { taskId: task.id, task })}
                 />
               ))}
             </div>
@@ -109,7 +123,7 @@ export default function TaskList({ navigate }) {
                 <TaskCard
                   key={task.id}
                   task={task}
-                  onClick={() => navigate('task-detail', { taskId: task.id })}
+                  onClick={() => navigate('task-detail', { taskId: task.id, task })}
                 />
               ))
             )}
