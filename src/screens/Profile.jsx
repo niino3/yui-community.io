@@ -1,8 +1,18 @@
 import { Settings, ChevronRight, Leaf } from 'lucide-react'
+import { useAccount } from 'wagmi'
 import Header from '../components/Header'
+import WalletConnect from '../components/WalletConnect'
 import { currentUser, transactions } from '../data/mockData'
+import { useYuiBalance } from '../web3/useYuiToken'
+import { useMembershipStatus } from '../web3/useMembershipSBT'
 
 export default function Profile({ navigate }) {
+  const { address, isConnected } = useAccount()
+  const { balance } = useYuiBalance(address)
+  const { isMember } = useMembershipStatus(address)
+
+  const displayBalance = isConnected ? Number(balance).toFixed(1) : currentUser.tokens
+
   return (
     <div className="screen">
       <Header
@@ -30,21 +40,24 @@ export default function Profile({ navigate }) {
 
           <div className="grid grid-cols-3 gap-3 mt-4">
             <div className="bg-primary-400/40 rounded-2xl p-3 text-center">
-              <p className="text-2xl font-black text-white">{currentUser.tokens}</p>
-              <p className="text-[10px] text-primary-200">TOKEN残高</p>
+              <p className="text-2xl font-black text-white">{displayBalance}</p>
+              <p className="text-[10px] text-primary-200">{isConnected ? 'YUI残高' : 'TOKEN残高'}</p>
             </div>
             <div className="bg-primary-400/40 rounded-2xl p-3 text-center">
               <p className="text-2xl font-black text-white">⭐{currentUser.trustScore}</p>
               <p className="text-[10px] text-primary-200">信頼スコア</p>
             </div>
             <div className="bg-primary-400/40 rounded-2xl p-3 text-center">
-              <p className="text-2xl font-black text-white">{currentUser.transactionCount}</p>
-              <p className="text-[10px] text-primary-200">取引回数</p>
+              <p className="text-2xl font-black text-white">{isConnected && isMember ? '✓' : currentUser.transactionCount}</p>
+              <p className="text-[10px] text-primary-200">{isConnected && isMember ? 'メンバーSBT' : '取引回数'}</p>
             </div>
           </div>
         </div>
 
         <div className="px-4 -mt-4 space-y-3 pb-6">
+          {/* Wallet */}
+          <WalletConnect />
+
           {/* SBT badges */}
           <div className="card p-4">
             <div className="flex items-center justify-between mb-3">

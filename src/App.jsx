@@ -14,6 +14,7 @@ import Equipment from './screens/Equipment'
 import EquipmentDetail from './screens/EquipmentDetail'
 import EarthCare from './screens/EarthCare'
 import AdminDashboard from './screens/AdminDashboard'
+import TokenTransfer from './screens/TokenTransfer'
 
 const TAB_SCREENS = ['home', 'tasks', 'qr', 'equipment', 'profile']
 
@@ -73,6 +74,7 @@ export default function App() {
       case 'equipment-detail': return <EquipmentDetail {...navProps} params={params} />
       case 'earth-care': return <EarthCare {...navProps} />
       case 'admin': return <AdminDashboard {...navProps} />
+      case 'token-transfer': return <TokenTransfer {...navProps} />
       default: return <Home {...navProps} />
     }
   }

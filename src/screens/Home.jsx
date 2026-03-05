@@ -1,8 +1,17 @@
-import { Bell, Plus, Search, Tractor, Leaf, ChevronRight, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
+import { Bell, Plus, Search, Tractor, Leaf, ChevronRight, ArrowUpRight, ArrowDownLeft, Send } from 'lucide-react'
+import { useAccount } from 'wagmi'
 import { currentUser, notifications, transactions, myActiveTasks } from '../data/mockData'
+import { useYuiBalance } from '../web3/useYuiToken'
+import { useMembershipStatus } from '../web3/useMembershipSBT'
+import WalletConnect from '../components/WalletConnect'
 
 export default function Home({ navigate }) {
+  const { address, isConnected } = useAccount()
+  const { balance, isLoading: balanceLoading } = useYuiBalance(address)
+  const { isMember } = useMembershipStatus(address)
   const unreadCount = notifications.filter(n => !n.read).length
+
+  const displayBalance = isConnected ? Number(balance).toFixed(1) : currentUser.tokens
 
   return (
     <div className="screen">
@@ -13,28 +22,49 @@ export default function Home({ navigate }) {
             <p className="text-xs text-gray-500">おはようございます</p>
             <h1 className="text-xl font-black text-gray-800">{currentUser.name} さん 🌾</h1>
           </div>
-          <button
-            onClick={() => navigate('home')}
-            className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-100"
-          >
-            <Bell size={20} className="text-gray-600" />
-            {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                {unreadCount}
-              </span>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            {isConnected && <WalletConnect compact />}
+            <button
+              onClick={() => navigate('home')}
+              className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-100"
+            >
+              <Bell size={20} className="text-gray-600" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {/* Wallet connection */}
+        {!isConnected && (
+          <div className="mx-4 mb-3">
+            <WalletConnect />
+          </div>
+        )}
+
         {/* Token balance card */}
         <div className="mx-4 mb-4">
           <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-3xl p-5 text-white shadow-lg">
-            <p className="text-xs text-primary-200 font-medium mb-1">残高</p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-primary-200 font-medium">残高</p>
+              {isConnected && (
+                <span className="text-[10px] bg-primary-400/40 text-primary-100 px-2 py-0.5 rounded-full">
+                  🔗 オンチェーン
+                </span>
+              )}
+            </div>
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-5xl font-black">{currentUser.tokens}</span>
-              <span className="text-lg font-bold text-primary-200">TOKEN</span>
+              {balanceLoading ? (
+                <div className="w-24 h-12 bg-primary-400/30 rounded-xl animate-pulse" />
+              ) : (
+                <span className="text-5xl font-black">{displayBalance}</span>
+              )}
+              <span className="text-lg font-bold text-primary-200">{isConnected ? 'YUI' : 'TOKEN'}</span>
             </div>
             <div className="flex items-center gap-3 mt-3">
               <div className="flex items-center gap-1">
@@ -42,13 +72,33 @@ export default function Home({ navigate }) {
                 <span className="text-sm font-bold">⭐ {currentUser.trustScore}</span>
               </div>
               <div className="w-px h-4 bg-primary-400" />
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-primary-200">取引回数</span>
-                <span className="text-sm font-bold">{currentUser.transactionCount}回</span>
-              </div>
+              {isConnected && isMember ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-primary-200">メンバー</span>
+                  <span className="text-sm font-bold">✓ SBT</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-primary-200">取引回数</span>
+                  <span className="text-sm font-bold">{currentUser.transactionCount}回</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Send token button */}
+        {isConnected && (
+          <div className="mx-4 mb-4">
+            <button
+              onClick={() => navigate('token-transfer')}
+              className="w-full card p-3 flex items-center justify-center gap-2 bg-token-50 border-token-200 active:bg-token-100"
+            >
+              <Send size={16} className="text-token-600" />
+              <span className="text-sm font-bold text-token-700">YUI を送金する</span>
+            </button>
+          </div>
+        )}
 
         {/* Quick actions */}
         <div className="px-4 mb-4">

@@ -1,0 +1,6 @@
+export const CHAIN_ID = 80002 // Polygon Amoy
+
+export const CONTRACTS = {
+  YuiToken: '0x414e5d24208c394210A1D61D78b2C42125f7f796',
+  MembershipSBT: '0x23177541Ce02EE55794523a68616BB9041590e15',
+}
