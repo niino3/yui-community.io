@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\TransactionRecordController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/communities', function () {
@@ -34,4 +35,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/tasks/{task}/approve', [TaskController::class, 'approve']);
 
     Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::post('/transactions/record', [TransactionRecordController::class, 'store']);
 });

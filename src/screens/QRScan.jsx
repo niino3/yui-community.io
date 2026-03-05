@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { isAddress } from 'viem'
 import { QRCodeSVG } from 'qrcode.react'
 import { CheckCircle, X, QrCode, Wallet } from 'lucide-react'
 import { useYuiBalance, useYuiTransfer } from '../web3/useYuiToken'
+import QrCodeScanner from '../components/QrCodeScanner'
+import { useAuth } from '../context/AuthContext'
+import { api } from '../api/client'
 
 const mockProduct = {
   name: 'ミニトマト（500g）',
@@ -13,8 +16,9 @@ const mockProduct = {
   icon: '🍅',
 }
 
-export default function QRScan({ navigate }) {
+export default function QRScan({ navigate, goBack }) {
   const { address, isConnected } = useAccount()
+  const { isAuthenticated } = useAuth()
   const { balance } = useYuiBalance(address)
   const { transfer, isPending, isConfirming, isSuccess, hash, error } = useYuiTransfer()
 
@@ -25,15 +29,6 @@ export default function QRScan({ navigate }) {
   const [scannedAmount, setScannedAmount] = useState('')
   const [manualInput, setManualInput] = useState(false)
 
-  function handleMockScan() {
-    if (isConnected) {
-      setManualInput(true)
-    } else {
-      setScannedAddress('')
-      setScannedAmount(String(mockProduct.price))
-      setMode('confirm')
-    }
-  }
 
   function handleManualConfirm() {
     if (isAddress(scannedAddress) && Number(scannedAmount) > 0) {
@@ -49,6 +44,24 @@ export default function QRScan({ navigate }) {
       setMode('success')
     }
   }
+
+  // M5-4: 送金成功時にバックエンドへ取引を記録
+  useEffect(() => {
+    if (isSuccess && hash && isAuthenticated && scannedAddress && scannedAmount) {
+      const record = async () => {
+        try {
+          await api.transactions.record({
+            to_address: scannedAddress,
+            amount: scannedAmount,
+            tx_hash: hash,
+          })
+        } catch {
+          /* 失敗しても送金自体は完了しているので無視 */
+        }
+      }
+      record()
+    }
+  }, [isSuccess, hash, isAuthenticated, scannedAddress, scannedAmount])
 
   if (isSuccess) {
     return (
@@ -73,7 +86,7 @@ export default function QRScan({ navigate }) {
               トランザクションを確認 →
             </a>
           )}
-          <button onClick={() => { setMode('select'); }} className="btn-primary mt-4">
+          <button onClick={() => navigate('home')} className="btn-primary mt-4">
             ホームに戻る
           </button>
         </div>
@@ -256,36 +269,24 @@ export default function QRScan({ navigate }) {
             </div>
           ) : (
             <>
-              <div className="w-64 h-64 relative mb-6">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full h-full border border-white/20 rounded-xl" />
-                </div>
-                <div className="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-primary-400 rounded-tl-xl" />
-                <div className="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-primary-400 rounded-tr-xl" />
-                <div className="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-primary-400 rounded-bl-xl" />
-                <div className="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-primary-400 rounded-br-xl" />
-                <div className="absolute left-4 right-4 top-1/2 h-0.5 bg-primary-400/70 animate-pulse" />
-
-                <button
-                  onClick={handleMockScan}
-                  className="absolute inset-0 flex flex-col items-center justify-center gap-2"
-                >
-                  <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
-                    <span className="text-2xl">📷</span>
-                  </div>
-                </button>
-              </div>
-
-              <p className="text-white text-sm font-medium text-center">
+              <QrCodeScanner
+                onScan={payload => {
+                  setScannedAddress(payload.to)
+                  setScannedAmount(payload.amount || '0')
+                  setMode('confirm')
+                }}
+                onError={() => {}}
+              />
+              <p className="text-white text-sm font-medium text-center mt-4">
                 {scanMode === 'pay'
-                  ? '農産物についているQRコードを\nスキャンしてください'
-                  : '依頼者のスマホに表示されている\nQRコードをスキャンしてください'}
+                  ? '農産物のQRコードをスキャンするか、手動入力で送金'
+                  : '依頼者のQRコードをスキャン'}
               </p>
               <button
-                onClick={handleMockScan}
-                className="mt-4 px-6 py-2 bg-primary-500 text-white rounded-full text-sm font-bold"
+                onClick={() => setManualInput(true)}
+                className="mt-4 px-6 py-2 bg-gray-700 text-white rounded-full text-sm font-bold border border-gray-600"
               >
-                {isConnected ? '手動入力で送金' : 'スキャン（モック）'}
+                手動入力で送金
               </button>
             </>
           )}

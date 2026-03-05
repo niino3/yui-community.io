@@ -107,6 +107,7 @@ export const api = {
       const qs = new URLSearchParams(params).toString()
       return api.get('/transactions' + (qs ? `?${qs}` : ''))
     },
+    record: (data) => api.post('/transactions/record', data),
   },
 }
 

@@ -1,17 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { isAddress } from 'viem'
 import Header from '../components/Header'
 import { useYuiBalance, useYuiTransfer } from '../web3/useYuiToken'
 import { Send, CheckCircle, AlertCircle } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { api } from '../api/client'
 
 export default function TokenTransfer({ goBack }) {
   const { address } = useAccount()
+  const { isAuthenticated } = useAuth()
   const { balance } = useYuiBalance(address)
   const { transfer, isPending, isConfirming, isSuccess, hash, error } = useYuiTransfer()
 
   const [to, setTo] = useState('')
   const [amount, setAmount] = useState('')
+
+  useEffect(() => {
+    if (isSuccess && hash && isAuthenticated && to && amount) {
+      api.transactions
+        .record({ to_address: to, amount, tx_hash: hash })
+        .catch(() => {})
+    }
+  }, [isSuccess, hash, isAuthenticated, to, amount])
 
   const isValidAddress = to && isAddress(to)
   const isValidAmount = amount && Number(amount) > 0 && Number(amount) <= Number(balance)
