@@ -38,9 +38,9 @@ Each community has its own token name, rules, and DAO
 
 ## デモ / Demo
 
-UIプロトタイプを公開しています（モックデータ、ブロックチェーン未接続）:
+UIプロトタイプを公開しています。MetaMask でウォレット接続すると、Polygon Amoy テストネット上のオンチェーンデータ（YUI トークン残高・SBT）を表示します。
 
-UI prototype is live (mock data, not connected to blockchain):
+UI prototype is live. Connect your MetaMask wallet to see on-chain data (YUI token balance, SBT) on Polygon Amoy testnet.
 
 https://yui-community-io.vercel.app/
 
@@ -50,12 +50,13 @@ https://yui-community-io.vercel.app/
 
 | 項目 / Item | 状態 / Status |
 |------------|--------------|
-| 設計ドキュメント（01〜09） / Design documents | 完了 / Done |
-| UIプロトタイプ（React + Vite） / UI prototype | 完了・Vercel デプロイ済み / Done, deployed to Vercel |
-| スマートコントラクト最小検証 / Smart contract verification | 完了・ローカルテスト済み / Done, tested locally |
-| バックエンド（Laravel + PostgreSQL） / Backend | 未着手 / Not started |
-| テストネットデプロイ（Polygon Amoy） / Testnet deploy | 未着手 / Not started |
-| フロントエンド × コントラクト接続 / Frontend × contract integration | 未着手 / Not started |
+| 設計ドキュメント（01〜09） / Design documents | ✅ 完了 / Done |
+| UIプロトタイプ（16画面） / UI prototype (16 screens) | ✅ Vercel デプロイ済み / Deployed |
+| スマートコントラクト / Smart contracts (YuiToken + MembershipSBT) | ✅ テスト12件パス / 12 tests pass |
+| テストネットデプロイ / Testnet deploy (Polygon Amoy) | ✅ Sourcify 検証済み / Verified |
+| フロントエンド × コントラクト接続 / Frontend × contract | ✅ wagmi + viem / Connected |
+| バックエンド / Backend (Laravel + PostgreSQL) | 🔨 開発中 / In progress |
+| QR 決済 MVP / QR payment MVP | 未着手 / Not started |
 
 詳細は [実装計画書](./docs/09_implementation-plan.md) を参照。
 
@@ -64,9 +65,10 @@ See [Implementation Plan](./docs/09_implementation-plan.md) for details.
 ## 技術スタック / Tech Stack
 
 - **Blockchain:** Polygon (Solidity + Hardhat + OpenZeppelin)
-- **Frontend:** React + Vite + Tailwind CSS (migration to Next.js + wagmi/viem planned)
+- **Frontend:** React + Vite + Tailwind CSS + wagmi + viem
 - **Backend:** Laravel + PostgreSQL + Redis
-- **Wallet:** Privy / Web3Auth (LINE login support under consideration)
+- **Wallet:** MetaMask（Privy / Web3Auth による LINE ログイン対応を検討中）
+- **Contracts:** YuiToken (ERC-20) / MembershipSBT (ERC-721 Soulbound) — [Polygon Amoy にデプロイ済み](https://amoy.polygonscan.com/address/0x414e5d24208c394210A1D61D78b2C42125f7f796)
 
 ## ドキュメント / Documentation
 
