@@ -40,4 +40,5 @@ RUN composer run-script post-autoload-dump 2>/dev/null || true \
 
 EXPOSE 8080
 
-CMD sh -c 'php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}'
+RUN chmod +x scripts/start.sh
+CMD ["/var/www/scripts/start.sh"]

@@ -9,8 +9,9 @@
 1. https://railway.app/dashboard を開く
 2. **New Project** → **Deploy from GitHub Repo**
 3. リポジトリ `yui-community.io` を選択
-4. **Root Directory** を `backend` に設定  
-   （サービス → Settings → Source → Root Directory）
+4. **Root Directory** を必ず `backend` に設定  
+   - 対象サービスをクリック → **Settings** → **Source** → **Root Directory** に `backend` を入力  
+   - ⚠️ 未設定のままだとリポジトリ直下の **React フロントエンド** がデプロイされ、`/api/health` が HTML を返す
 
 ## 2. データベース追加
 
@@ -32,6 +33,7 @@
 | `SESSION_DRIVER` | `redis` |
 | `CACHE_STORE` | `redis` |
 | `QUEUE_CONNECTION` | `redis` |
+| `RAILWAY_HEALTHCHECK_TIMEOUT_SEC` | `120`（推奨: migrate 完了まで余裕を持たせる） |
 
 ## 4. 参照変数の追加
 
@@ -59,3 +61,26 @@
 ```json
 {"status":"ok","service":"yui-backend","timestamp":"..."}
 ```
+
+---
+
+## トラブルシューティング
+
+### `/api/health` が HTML を返す
+
+**原因**: Root Directory が未設定で、フロントエンド（React）がデプロイされている。
+
+**対処**:
+1. Railway ダッシュボードでデプロイ中のサービスを選択
+2. **Settings** → **Source** → **Root Directory**
+3. `backend` と入力（先頭に `/` は付けない）
+4. 保存後、**Redeploy** を実行
+
+### ヘルスチェックが "service unavailable" で失敗する
+
+**原因**: 起動完了前にヘルスチェックが開始されている（migrate に時間がかかる）。
+
+**対処**:
+1. `RAILWAY_HEALTHCHECK_TIMEOUT_SEC` を環境変数で `120` に設定
+2. 起動スクリプト（`scripts/start.sh`）で migrate をバックグラウンド実行し、serve を先行起動済み
+3. それでも失敗する場合: **Settings** → **Deploy** → **Health Check Timeout** を 120 秒以上に変更
