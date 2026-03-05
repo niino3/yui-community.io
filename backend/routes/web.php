@@ -6,11 +6,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// API health（web 経由で確実に JSON を返す）
-Route::get('/api/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'service' => 'yui-backend',
-        'timestamp' => now()->toIso8601String(),
-    ]);
-});
+// /api/health は api.php で定義（web ミドルウェア＝Redis セッションを避ける）
