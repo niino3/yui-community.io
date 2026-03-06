@@ -45,6 +45,9 @@ export function useYuiTransfer() {
       ...contractConfig,
       functionName: 'transfer',
       args: [to, parseEther(amount)],
+      // Polygon Amoy は最低ガス 25 gwei 必要
+      maxPriorityFeePerGas: 30n * 10n ** 9n,  // 30 gwei
+      maxFeePerGas: 100n * 10n ** 9n,         // 100 gwei
     })
   }
 
