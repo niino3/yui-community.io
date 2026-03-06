@@ -22,7 +22,7 @@ export default function QRScan({ navigate, goBack }) {
   const { balance } = useYuiBalance(address)
   const { transfer, isPending, isConfirming, isSuccess, hash, error } = useYuiTransfer()
 
-  const [mode, setMode] = useState('select') // 'select', 'show-qr', 'scan', 'confirm', 'success'
+  const [mode, setMode] = useState('select') // 'select', 'show-qr', 'scan', 'manual', 'confirm', 'success'
   const [scanMode, setScanMode] = useState('pay')
   const [payAmount, setPayAmount] = useState('')
   const [scannedAddress, setScannedAddress] = useState('')
@@ -216,6 +216,56 @@ export default function QRScan({ navigate, goBack }) {
     )
   }
 
+  // 手動入力画面（明るいテーマ・カメラ不要）
+  if (mode === 'manual') {
+    return (
+      <div className="screen">
+        <div className="flex-shrink-0 h-14 flex items-center justify-between px-4 bg-[#faf8f4]">
+          <button onClick={() => setMode('select')} className="w-10 h-10 flex items-center justify-center">
+            <X size={24} className="text-gray-600" />
+          </button>
+          <h1 className="text-base font-bold text-gray-800">手動送金</h1>
+          <div className="w-10" />
+        </div>
+
+        <div className="flex-1 px-4 py-6 space-y-4">
+          <div>
+            <label className="text-sm font-bold text-gray-700 block mb-1">送金先アドレス</label>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={scannedAddress}
+              onChange={e => setScannedAddress(e.target.value)}
+              className="w-full border border-gray-200 bg-white rounded-2xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-bold text-gray-700 block mb-1">金額 (YUI)</label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              placeholder="0"
+              value={scannedAmount}
+              onChange={e => setScannedAmount(e.target.value)}
+              className="w-full border border-gray-200 bg-white rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            />
+            {isConnected && (
+              <p className="text-xs text-gray-400 mt-1">残高: {Number(balance).toFixed(1)} YUI</p>
+            )}
+          </div>
+          <button
+            onClick={handleManualConfirm}
+            disabled={!isAddress(scannedAddress) || !scannedAmount || Number(scannedAmount) <= 0}
+            className="btn-primary w-full disabled:opacity-40"
+          >
+            確認画面へ
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (mode === 'scan') {
     return (
       <div className="screen bg-gray-900">
@@ -321,6 +371,21 @@ export default function QRScan({ navigate, goBack }) {
             <p className="text-xs text-gray-500 mt-1">相手のQRコードを読み取って送金</p>
           </div>
         </button>
+
+        {isConnected && (
+          <button
+            onClick={() => setMode('manual')}
+            className="w-full card p-6 flex flex-col items-center gap-3 active:bg-gray-50 transition-colors"
+          >
+            <div className="w-16 h-16 bg-token-100 rounded-3xl flex items-center justify-center">
+              <span className="text-2xl">✏️</span>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-black text-gray-800">手動入力で送金</p>
+              <p className="text-xs text-gray-500 mt-1">アドレスと金額を入力して送金</p>
+            </div>
+          </button>
+        )}
 
         {isConnected && (
           <button
