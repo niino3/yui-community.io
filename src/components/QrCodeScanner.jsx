@@ -51,11 +51,11 @@ export default function QrCodeScanner({ onScan, onError }) {
           decodedText => {
             const payload = parseYuiQrPayload(decodedText)
             if (payload) {
-              scanner.stop().catch(() => {})
+              scanner.stop().catch(() => { })
               onScanRef.current?.(payload)
             }
           },
-          () => {}
+          () => { }
         )
       })
       .then(() => setStatus('scanning'))
@@ -66,8 +66,8 @@ export default function QrCodeScanner({ onScan, onError }) {
       })
 
     return () => {
-      scanner.stop().catch(() => {})
-      scanner.clear().catch(() => {})
+      scanner.stop().catch(() => { })
+      scanner.clear().catch(() => { })
       scannerRef.current = null
     }
   }, [onError])

@@ -108,11 +108,37 @@ export default function TokenTransfer({ goBack }) {
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-2xl p-3">
-              <AlertCircle size={16} className="text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-red-600">{error.shortMessage || error.message}</p>
+            <div className="flex flex-col gap-2 bg-red-50 border border-red-200 rounded-2xl p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={16} className="text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-600">{error.shortMessage || error.message}</p>
+              </div>
+              {(/(insufficient|funds|gas|balance)/i.test(error.shortMessage || error.message)) && (
+                <a
+                  href="https://faucet.polygon.technology/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-primary-600 underline"
+                >
+                  POL（ガス代）が足りません → Faucet でチャージ
+                </a>
+              )}
             </div>
           )}
+          <div className="rounded-2xl p-3 bg-primary-50 border border-primary-200">
+            <p className="text-xs font-bold text-primary-800 mb-1">送金できない場合</p>
+            <p className="text-xs text-primary-700 mb-2">
+              送金には少量の POL（ネットワーク手数料）が必要です。YUI だけでは送金できません。
+            </p>
+            <a
+              href="https://faucet.polygon.technology/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-bold text-primary-600 underline"
+            >
+              Faucet でテスト用 POL を無料取得 →
+            </a>
+          </div>
 
           <button
             type="submit"

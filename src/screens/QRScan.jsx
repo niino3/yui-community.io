@@ -140,8 +140,34 @@ export default function QRScan({ navigate, goBack }) {
           </div>
 
           {error && (
-            <div className="card p-3 bg-red-50 border-red-200">
+            <div className="card p-3 bg-red-50 border-red-200 space-y-2">
               <p className="text-xs text-red-600">{error.shortMessage || error.message}</p>
+              {(/(insufficient|funds|gas|balance)/i.test(error.shortMessage || error.message)) && (
+                <a
+                  href="https://faucet.polygon.technology/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-xs font-bold text-primary-600 underline"
+                >
+                  POL（ガス代）が足りません → Faucet でチャージ
+                </a>
+              )}
+            </div>
+          )}
+          {isConnected && (
+            <div className="card p-3 bg-primary-50 border-primary-200">
+              <p className="text-xs text-primary-800 font-medium mb-1">送金できない場合</p>
+              <p className="text-xs text-primary-700 mb-2">
+                送金には少量の POL（ネットワーク手数料）が必要です。YUI だけでは送金できません。
+              </p>
+              <a
+                href="https://faucet.polygon.technology/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-primary-600 underline"
+              >
+                Faucet でテスト用 POL を無料取得 →
+              </a>
             </div>
           )}
         </div>
@@ -216,56 +242,6 @@ export default function QRScan({ navigate, goBack }) {
     )
   }
 
-  // 手動入力画面（明るいテーマ・カメラ不要）
-  if (mode === 'manual') {
-    return (
-      <div className="screen">
-        <div className="flex-shrink-0 h-14 flex items-center justify-between px-4 bg-[#faf8f4]">
-          <button onClick={() => setMode('select')} className="w-10 h-10 flex items-center justify-center">
-            <X size={24} className="text-gray-600" />
-          </button>
-          <h1 className="text-base font-bold text-gray-800">手動送金</h1>
-          <div className="w-10" />
-        </div>
-
-        <div className="flex-1 px-4 py-6 space-y-4">
-          <div>
-            <label className="text-sm font-bold text-gray-700 block mb-1">送金先アドレス</label>
-            <input
-              type="text"
-              placeholder="0x..."
-              value={scannedAddress}
-              onChange={e => setScannedAddress(e.target.value)}
-              className="w-full border border-gray-200 bg-white rounded-2xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-bold text-gray-700 block mb-1">金額 (YUI)</label>
-            <input
-              type="number"
-              step="1"
-              min="0"
-              placeholder="0"
-              value={scannedAmount}
-              onChange={e => setScannedAmount(e.target.value)}
-              className="w-full border border-gray-200 bg-white rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
-            />
-            {isConnected && (
-              <p className="text-xs text-gray-400 mt-1">残高: {Number(balance).toFixed(1)} YUI</p>
-            )}
-          </div>
-          <button
-            onClick={handleManualConfirm}
-            disabled={!isAddress(scannedAddress) || !scannedAmount || Number(scannedAmount) <= 0}
-            className="btn-primary w-full disabled:opacity-40"
-          >
-            確認画面へ
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   if (mode === 'scan') {
     return (
       <div className="screen bg-gray-900">
@@ -325,7 +301,7 @@ export default function QRScan({ navigate, goBack }) {
                   setScannedAmount(payload.amount || '0')
                   setMode('confirm')
                 }}
-                onError={() => {}}
+                onError={() => { }}
               />
               <p className="text-white text-sm font-medium text-center mt-4">
                 {scanMode === 'pay'
@@ -374,7 +350,7 @@ export default function QRScan({ navigate, goBack }) {
 
         {isConnected && (
           <button
-            onClick={() => setMode('manual')}
+            onClick={() => navigate('token-transfer')}
             className="w-full card p-6 flex flex-col items-center gap-3 active:bg-gray-50 transition-colors"
           >
             <div className="w-16 h-16 bg-token-100 rounded-3xl flex items-center justify-center">

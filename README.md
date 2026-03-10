@@ -55,8 +55,9 @@ https://yui-community-io.vercel.app/
 | スマートコントラクト / Smart contracts (YuiToken + MembershipSBT) | ✅ テスト12件パス / 12 tests pass |
 | テストネットデプロイ / Testnet deploy (Polygon Amoy) | ✅ Sourcify 検証済み / Verified |
 | フロントエンド × コントラクト接続 / Frontend × contract | ✅ wagmi + viem / Connected |
-| バックエンド / Backend (Laravel + PostgreSQL) | 🔨 開発中 / In progress |
-| QR 決済 MVP / QR payment MVP | 未着手 / Not started |
+| バックエンド / Backend (Laravel + PostgreSQL) | ✅ Railway デプロイ済み / Deployed |
+| QR 決済 MVP / QR payment MVP | ✅ 完了 / Done |
+| 試験運用準備 / Pre-launch preparation | 🔨 準備中 / In progress |
 
 詳細は [実装計画書](./docs/09_implementation-plan.md) を参照。
 

@@ -1,10 +1,27 @@
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
-import { Wallet, LogOut, ExternalLink } from 'lucide-react'
+import { useState } from 'react'
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
+import { polygonAmoy } from 'wagmi/chains'
+import { Wallet, LogOut, ExternalLink, AlertTriangle } from 'lucide-react'
+
+const FAUCET_URL = 'https://faucet.polygon.technology/'
 
 export default function WalletConnect({ compact = false }) {
   const { address, isConnected, chain } = useAccount()
-  const { connect, connectors, isPending } = useConnect()
+  const { connect, connectors, isPending, error: connectError } = useConnect()
   const { disconnect } = useDisconnect()
+  const { switchChain } = useSwitchChain()
+  const [showNoWallet, setShowNoWallet] = useState(false)
+
+  const isWrongNetwork = isConnected && chain?.id !== polygonAmoy.id
+
+  function handleConnect() {
+    if (!window.ethereum) {
+      setShowNoWallet(true)
+      return
+    }
+    setShowNoWallet(false)
+    connect({ connector: connectors[0] })
+  }
 
   if (isConnected) {
     const shortAddr = `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -12,25 +29,51 @@ export default function WalletConnect({ compact = false }) {
     if (compact) {
       return (
         <button
-          onClick={() => disconnect()}
-          className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-medium"
+          onClick={() => isWrongNetwork ? switchChain({ chainId: polygonAmoy.id }) : disconnect()}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+            isWrongNetwork ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'
+          }`}
         >
-          <div className="w-2 h-2 bg-green-500 rounded-full" />
-          {shortAddr}
+          <div className={`w-2 h-2 rounded-full ${isWrongNetwork ? 'bg-yellow-500' : 'bg-green-500'}`} />
+          {isWrongNetwork ? 'ネットワーク切替' : shortAddr}
         </button>
       )
     }
 
     return (
-      <div className="card p-4">
-        <div className="flex items-center justify-between mb-2">
+      <div className="card p-4 space-y-3">
+        {isWrongNetwork && (
+          <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+            <AlertTriangle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-bold text-yellow-800">ネットワークが違います</p>
+              <p className="text-xs text-yellow-700 mt-0.5">Polygon Amoy テストネットに切り替えてください</p>
+              <button
+                onClick={() => switchChain({ chainId: polygonAmoy.id })}
+                className="mt-2 text-xs font-bold text-white bg-yellow-600 rounded-lg px-3 py-1.5"
+              >
+                Polygon Amoy に切り替え
+              </button>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-            <span className="text-xs font-medium text-green-700">接続済み</span>
+            <div className={`w-2 h-2 rounded-full ${isWrongNetwork ? 'bg-yellow-500' : 'bg-green-500'}`} />
+            <span className={`text-xs font-medium ${isWrongNetwork ? 'text-yellow-700' : 'text-green-700'}`}>
+              {isWrongNetwork ? `${chain?.name || 'Unknown'}（要切替）` : '接続済み'}
+            </span>
           </div>
           <span className="text-xs text-gray-400">{chain?.name || 'Unknown'}</span>
         </div>
-        <p className="text-sm font-mono text-gray-700 mb-3">{shortAddr}</p>
+        <p className="text-sm font-mono text-gray-700">{shortAddr}</p>
+        {!isWrongNetwork && (
+          <div className="text-xs text-gray-400">
+            <a href={FAUCET_URL} target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">
+              テスト用 POL を取得（Faucet）
+            </a>
+          </div>
+        )}
         <div className="flex gap-2">
           <a
             href={`https://amoy.polygonscan.com/address/${address}`}
@@ -52,15 +95,33 @@ export default function WalletConnect({ compact = false }) {
   }
 
   return (
-    <button
-      onClick={() => connect({ connector: connectors[0] })}
-      disabled={isPending}
-      className="w-full card p-4 flex items-center justify-center gap-3 bg-primary-500 text-white active:bg-primary-600 transition-colors"
-    >
-      <Wallet size={20} />
-      <span className="font-bold text-sm">
-        {isPending ? '接続中...' : 'ウォレットを接続'}
-      </span>
-    </button>
+    <div className="space-y-2">
+      <button
+        onClick={handleConnect}
+        disabled={isPending}
+        className="w-full card p-4 flex items-center justify-center gap-3 bg-primary-500 text-white active:bg-primary-600 transition-colors"
+      >
+        <Wallet size={20} />
+        <span className="font-bold text-sm">
+          {isPending ? '接続中...' : 'ウォレットを接続'}
+        </span>
+      </button>
+      {showNoWallet && (
+        <div className="card p-3 bg-yellow-50 border-yellow-200 space-y-2">
+          <p className="text-xs text-yellow-800 font-bold">MetaMask が見つかりません</p>
+          <a
+            href="https://metamask.io/download/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-primary-600 font-bold"
+          >
+            MetaMask をインストール <ExternalLink size={10} />
+          </a>
+        </div>
+      )}
+      {connectError && (
+        <p className="text-xs text-red-500 text-center">{connectError.shortMessage || connectError.message}</p>
+      )}
+    </div>
   )
 }

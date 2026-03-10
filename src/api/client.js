@@ -109,6 +109,30 @@ export const api = {
     },
     record: (data) => api.post('/transactions/record', data),
   },
+  equipment: {
+    list: (params) => {
+      const qs = new URLSearchParams(params).toString()
+      return api.get('/equipment' + (qs ? `?${qs}` : ''))
+    },
+    get: (id) => api.get(`/equipment/${id}`),
+    reserve: (id, data) => api.post(`/equipment/${id}/reserve`, data),
+    return: (id) => api.patch(`/equipment/${id}/return`, {}),
+  },
+  earthCare: {
+    list: (params) => {
+      const qs = new URLSearchParams(params).toString()
+      return api.get('/earth-care' + (qs ? `?${qs}` : ''))
+    },
+    get: (id) => api.get(`/earth-care/${id}`),
+    create: (data) => api.post('/earth-care', data),
+    approve: (id) => api.post(`/earth-care/${id}/approve`, {}),
+  },
+  notifications: {
+    list: () => api.get('/notifications'),
+    unreadCount: () => api.get('/notifications/unread-count'),
+    markAsRead: (id) => api.patch(`/notifications/${id}/read`, {}),
+    markAllAsRead: () => api.post('/notifications/read-all'),
+  },
 }
 
 export default api
