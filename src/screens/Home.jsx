@@ -1,16 +1,34 @@
-import { Bell, Plus, Search, Tractor, Leaf, ChevronRight, ArrowUpRight, ArrowDownLeft, Send } from 'lucide-react'
+import { Bell, Plus, Search, Leaf, ChevronRight, ArrowUpRight, ArrowDownLeft, Send } from 'lucide-react'
 import { useAccount } from 'wagmi'
-import { currentUser, notifications, transactions, myActiveTasks } from '../data/mockData'
+import { useAuth } from '../context/AuthContext'
+import { currentUser, notifications as mockNotifications, transactions as mockTransactions, myActiveTasks } from '../data/mockData'
 import { useYuiBalance } from '../web3/useYuiToken'
 import { useMembershipStatus } from '../web3/useMembershipSBT'
+import { useNotifications, useUnreadCount } from '../hooks/useNotifications'
+import { useTransactions } from '../hooks/useTransactions'
+import { useTasks } from '../hooks/useTasks'
 import WalletConnect from '../components/WalletConnect'
+import { SkeletonCard } from '../components/Skeleton'
 
 export default function Home({ navigate }) {
   const { address, isConnected } = useAccount()
+  const { isAuthenticated, user } = useAuth()
   const { balance, isLoading: balanceLoading } = useYuiBalance(address)
   const { isMember } = useMembershipStatus(address)
-  const unreadCount = notifications.filter(n => !n.read).length
 
+  const { data: notifData } = useNotifications()
+  const { data: unreadData } = useUnreadCount()
+  const { data: txData } = useTransactions(isAuthenticated ? {} : { _skip: true })
+  const { data: activeTaskData } = useTasks(
+    isAuthenticated ? { status: 'matched', assigned_to: 'me' } : { _skip: true }
+  )
+
+  const notifications = notifData?.data ?? mockNotifications
+  const unreadCount = unreadData?.count ?? notifications.filter(n => !n.read).length
+  const transactions = txData?.data ?? mockTransactions
+  const activeTasks = activeTaskData?.data ?? (isAuthenticated ? [] : myActiveTasks)
+
+  const displayName = user?.display_name || currentUser.name
   const displayBalance = isConnected ? Number(balance).toFixed(1) : currentUser.tokens
 
   return (
@@ -20,7 +38,7 @@ export default function Home({ navigate }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-500">おはようございます</p>
-            <h1 className="text-xl font-black text-gray-800">{currentUser.name} さん 🌾</h1>
+            <h1 className="text-xl font-black text-gray-800">{displayName} さん 🌾</h1>
           </div>
           <div className="flex items-center gap-2">
             {isConnected && <WalletConnect compact />}
@@ -69,7 +87,7 @@ export default function Home({ navigate }) {
             <div className="flex items-center gap-3 mt-3">
               <div className="flex items-center gap-1">
                 <span className="text-xs text-primary-200">信頼スコア</span>
-                <span className="text-sm font-bold">⭐ {currentUser.trustScore}</span>
+                <span className="text-sm font-bold">⭐ {user?.trust_score ?? currentUser.trustScore}</span>
               </div>
               <div className="w-px h-4 bg-primary-400" />
               {isConnected && isMember ? (
@@ -80,7 +98,7 @@ export default function Home({ navigate }) {
               ) : (
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-primary-200">取引回数</span>
-                  <span className="text-sm font-bold">{currentUser.transactionCount}回</span>
+                  <span className="text-sm font-bold">{user?.transaction_count ?? currentUser.transactionCount}回</span>
                 </div>
               )}
             </div>
@@ -157,11 +175,11 @@ export default function Home({ navigate }) {
           </div>
         </div>
 
-        {/* Active task */}
-        {myActiveTasks.length > 0 && (
+        {/* Active tasks */}
+        {activeTasks.length > 0 && (
           <div className="px-4 mb-4">
             <h2 className="text-sm font-bold text-gray-700 mb-2">進行中のタスク</h2>
-            {myActiveTasks.map(task => (
+            {activeTasks.map(task => (
               <button
                 key={task.id}
                 onClick={() => navigate('work-complete', { task })}
@@ -169,12 +187,12 @@ export default function Home({ navigate }) {
               >
                 <div className="flex items-center justify-between">
                   <div className="text-left">
-                    <p className="text-xs text-primary-600 font-medium mb-0.5">マッチング済み</p>
+                    <p className="text-xs text-primary-600 font-medium">マッチング済み</p>
                     <p className="text-sm font-bold text-gray-800">{task.title}</p>
-                    <p className="text-xs text-gray-500">{task.dateLabel}</p>
+                    <p className="text-xs text-gray-500">{task.dateLabel ?? task.created_at}</p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-base font-black text-token-600">+{task.reward}</span>
+                    <span className="text-base font-black text-token-600">+{task.token_reward ?? task.reward}</span>
                     <span className="text-xs text-token-500">TOKEN</span>
                     <ChevronRight size={16} className="text-primary-400" />
                   </div>
@@ -197,8 +215,8 @@ export default function Home({ navigate }) {
                   {n.type === 'match' ? '🤝' : n.type === 'token' ? '💰' : n.type === 'review' ? '⭐' : '🌱'}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-700 leading-snug">{n.text}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{n.time}</p>
+                  <p className="text-xs text-gray-700 leading-snug">{n.text ?? n.message}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{n.time ?? n.created_at}</p>
                 </div>
                 {!n.read && <div className="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0 mt-1" />}
               </div>
@@ -213,23 +231,26 @@ export default function Home({ navigate }) {
             <button className="text-xs text-primary-500 font-medium">すべて見る</button>
           </div>
           <div className="card divide-y divide-gray-50">
-            {transactions.slice(0, 4).map(tx => (
-              <div key={tx.id} className="p-3 flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${tx.type === 'earn' ? 'bg-green-100' : 'bg-red-100'}`}>
-                  {tx.type === 'earn'
-                    ? <ArrowDownLeft size={16} className="text-green-600" />
-                    : <ArrowUpRight size={16} className="text-red-500" />
-                  }
+            {transactions.slice(0, 4).map(tx => {
+              const isEarn = tx.type === 'earn' || Number(tx.amount) > 0
+              return (
+                <div key={tx.id} className="p-3 flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isEarn ? 'bg-green-100' : 'bg-red-100'}`}>
+                    {isEarn
+                      ? <ArrowDownLeft size={16} className="text-green-600" />
+                      : <ArrowUpRight size={16} className="text-red-500" />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-gray-700 truncate">{tx.label ?? tx.description}</p>
+                    <p className="text-[10px] text-gray-400">{tx.date ?? tx.created_at}</p>
+                  </div>
+                  <span className={`text-sm font-bold ${isEarn ? 'text-green-600' : 'text-red-500'}`}>
+                    {Number(tx.amount) > 0 ? '+' : ''}{tx.amount}
+                  </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-700 truncate">{tx.label}</p>
-                  <p className="text-[10px] text-gray-400">{tx.date}</p>
-                </div>
-                <span className={`text-sm font-bold ${tx.type === 'earn' ? 'text-green-600' : 'text-red-500'}`}>
-                  {tx.amount > 0 ? '+' : ''}{tx.amount}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>

@@ -116,7 +116,7 @@ export default function App() {
       <div className="ml-8 text-gray-400 text-sm max-w-xs hidden lg:block">
         <p className="font-semibold text-gray-600 mb-3">yui UIプロトタイプ</p>
         <p className="mb-2">地域コミュニティトークンアプリ</p>
-        <p className="text-xs text-gray-400">※ すべてモックデータです</p>
+        <p className="text-xs text-gray-400">※ 認証後は実 API に接続されます</p>
       </div>
     </div>
   )

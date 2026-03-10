@@ -4,6 +4,7 @@ import { isAddress } from 'viem'
 import { QRCodeSVG } from 'qrcode.react'
 import { CheckCircle, X, QrCode, Wallet } from 'lucide-react'
 import { useYuiBalance, useYuiTransfer } from '../web3/useYuiToken'
+import { EXPLORER_URL } from '../contracts/addresses'
 import QrCodeScanner from '../components/QrCodeScanner'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../api/client'
@@ -78,7 +79,7 @@ export default function QRScan({ navigate, goBack }) {
           </div>
           {hash && (
             <a
-              href={`https://amoy.polygonscan.com/tx/${hash}`}
+              href={`${EXPLORER_URL}/tx/${hash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-primary-600 underline mb-4"

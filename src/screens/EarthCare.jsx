@@ -1,15 +1,33 @@
 import { useState } from 'react'
-import { Camera, MapPin, CheckCircle } from 'lucide-react'
+import { Camera, MapPin } from 'lucide-react'
 import Header from '../components/Header'
+import { useAuth } from '../context/AuthContext'
+import { useEarthCareCreate } from '../hooks/useEarthCare'
 import { earthCareActivities } from '../data/mockData'
 
 export default function EarthCare({ goBack }) {
-  const [step, setStep] = useState('form') // 'form', 'pending', 'approved'
+  const [step, setStep] = useState('form')
   const [selected, setSelected] = useState(null)
   const [amount, setAmount] = useState('')
   const [photoTaken, setPhotoTaken] = useState(false)
 
+  const { isAuthenticated } = useAuth()
+  const createMutation = useEarthCareCreate()
+
   const selectedActivity = earthCareActivities.find(a => a.id === selected)
+
+  async function handleSubmit() {
+    if (isAuthenticated && selectedActivity) {
+      try {
+        await createMutation.mutateAsync({
+          type: selectedActivity.type,
+          amount: Number(amount) || 1,
+          description: `${selectedActivity.label} ${amount || 1}`,
+        })
+      } catch { /* proceed with mock flow */ }
+    }
+    setStep('pending')
+  }
 
   if (step === 'approved') {
     return (
@@ -173,11 +191,11 @@ export default function EarthCare({ goBack }) {
 
       <div className="flex-shrink-0 p-4 border-t border-gray-100">
         <button
-          onClick={() => setStep('pending')}
-          disabled={!selected || !photoTaken}
+          onClick={handleSubmit}
+          disabled={!selected || !photoTaken || createMutation.isPending}
           className={`w-full py-4 bg-emerald-500 text-white rounded-2xl font-bold text-lg active:bg-emerald-600 transition-colors ${(!selected || !photoTaken) ? 'opacity-50' : ''}`}
         >
-          コミュニティに申請する
+          {createMutation.isPending ? '送信中...' : 'コミュニティに申請する'}
         </button>
         {(!selected || !photoTaken) && (
           <p className="text-center text-xs text-gray-400 mt-2">

@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { MapPin, CheckCircle } from 'lucide-react'
 import Header from '../components/Header'
+import { useAuth } from '../context/AuthContext'
+import { useCreateTask } from '../hooks/useTasks'
 import { currentUser } from '../data/mockData'
+import { useYuiBalance } from '../web3/useYuiToken'
+import { useAccount } from 'wagmi'
 
 const taskTypes = ['草取り', '収穫', '種まき', '袋詰め', '農薬散布', '農機具操作', 'その他']
 const timeSlots = ['午前 9:00〜12:00', '午後 13:00〜17:00', '一日（9:00〜17:00）']
@@ -17,11 +21,30 @@ export default function TaskPost({ goBack, navigate }) {
     memo: '',
   })
 
+  const { isAuthenticated, user } = useAuth()
+  const { address } = useAccount()
+  const { balance } = useYuiBalance(address)
+  const createTask = useCreateTask()
+
+  const displayBalance = address ? Number(balance).toFixed(1) : currentUser.tokens
+
   function update(key, value) {
     setForm(f => ({ ...f, [key]: value }))
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
+    if (isAuthenticated) {
+      try {
+        await createTask.mutateAsync({
+          title: `${form.type}のお手伝い`,
+          description: form.memo || `${form.type}作業の募集です`,
+          category: 'people_care',
+          token_reward: form.tokens,
+          date: form.date || null,
+          time_slot: form.timeSlot || null,
+        })
+      } catch { /* proceed with mock flow */ }
+    }
     setSubmitted(true)
   }
 
@@ -120,7 +143,7 @@ export default function TaskPost({ goBack, navigate }) {
         {/* Token amount */}
         <div className="card p-4">
           <p className="text-sm font-bold text-gray-700 mb-1">お礼（TOKEN）</p>
-          <p className="text-xs text-gray-400 mb-3">現在の残高: {currentUser.tokens} TOKEN</p>
+          <p className="text-xs text-gray-400 mb-3">現在の残高: {displayBalance} TOKEN</p>
           <div className="flex items-baseline gap-2 mb-3">
             <input
               type="number"
@@ -163,10 +186,10 @@ export default function TaskPost({ goBack, navigate }) {
       <div className="flex-shrink-0 p-4 bg-[#faf8f4] border-t border-gray-100">
         <button
           onClick={handleSubmit}
-          disabled={!form.type}
+          disabled={!form.type || createTask.isPending}
           className={`btn-primary ${!form.type ? 'opacity-50' : ''}`}
         >
-          投稿する
+          {createTask.isPending ? '投稿中...' : '投稿する'}
         </button>
       </div>
     </div>

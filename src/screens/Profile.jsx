@@ -2,16 +2,30 @@ import { Settings, ChevronRight, Leaf } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import Header from '../components/Header'
 import WalletConnect from '../components/WalletConnect'
-import { currentUser, transactions } from '../data/mockData'
+import { useAuth } from '../context/AuthContext'
+import { useTransactions } from '../hooks/useTransactions'
+import { currentUser, transactions as mockTransactions } from '../data/mockData'
 import { useYuiBalance } from '../web3/useYuiToken'
 import { useMembershipStatus } from '../web3/useMembershipSBT'
+import { SkeletonCard } from '../components/Skeleton'
 
 export default function Profile({ navigate }) {
   const { address, isConnected } = useAccount()
+  const { isAuthenticated, user } = useAuth()
   const { balance } = useYuiBalance(address)
   const { isMember } = useMembershipStatus(address)
+  const { data: txData, isLoading: txLoading } = useTransactions(
+    isAuthenticated ? {} : { _skip: true }
+  )
 
+  const transactions = txData?.data ?? mockTransactions
   const displayBalance = isConnected ? Number(balance).toFixed(1) : currentUser.tokens
+  const displayName = user?.display_name || currentUser.name
+  const area = user?.area || currentUser.area
+  const joinedAt = user?.created_at?.slice(0, 10) || currentUser.joinedAt
+  const trustScore = user?.trust_score ?? currentUser.trustScore
+  const txCount = user?.transaction_count ?? currentUser.transactionCount
+  const sbts = currentUser.sbts
 
   return (
     <div className="screen">
@@ -32,9 +46,9 @@ export default function Profile({ navigate }) {
               👨‍🌾
             </div>
             <div className="text-white">
-              <h2 className="text-xl font-black">{currentUser.name}</h2>
-              <p className="text-primary-200 text-sm">{currentUser.area} · {currentUser.age}歳</p>
-              <p className="text-primary-200 text-xs">加入: {currentUser.joinedAt}</p>
+              <h2 className="text-xl font-black">{displayName}</h2>
+              <p className="text-primary-200 text-sm">{area}</p>
+              <p className="text-primary-200 text-xs">加入: {joinedAt}</p>
             </div>
           </div>
 
@@ -44,11 +58,11 @@ export default function Profile({ navigate }) {
               <p className="text-[10px] text-primary-200">{isConnected ? 'YUI残高' : 'TOKEN残高'}</p>
             </div>
             <div className="bg-primary-400/40 rounded-2xl p-3 text-center">
-              <p className="text-2xl font-black text-white">⭐{currentUser.trustScore}</p>
+              <p className="text-2xl font-black text-white">⭐{trustScore}</p>
               <p className="text-[10px] text-primary-200">信頼スコア</p>
             </div>
             <div className="bg-primary-400/40 rounded-2xl p-3 text-center">
-              <p className="text-2xl font-black text-white">{isConnected && isMember ? '✓' : currentUser.transactionCount}</p>
+              <p className="text-2xl font-black text-white">{isConnected && isMember ? '✓' : txCount}</p>
               <p className="text-[10px] text-primary-200">{isConnected && isMember ? 'メンバーSBT' : '取引回数'}</p>
             </div>
           </div>
@@ -62,10 +76,10 @@ export default function Profile({ navigate }) {
           <div className="card p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-bold text-gray-700">保有バッジ（SBT）</p>
-              <span className="text-xs text-gray-400">{currentUser.sbts.length}枚</span>
+              <span className="text-xs text-gray-400">{sbts.length}枚</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {currentUser.sbts.map(sbt => (
+              {sbts.map(sbt => (
                 <div key={sbt.id} className={`rounded-2xl p-3 ${sbt.color} flex items-center gap-2`}>
                   <span className="text-2xl">{sbt.icon}</span>
                   <div>
@@ -118,22 +132,29 @@ export default function Profile({ navigate }) {
           {/* Transaction history */}
           <div className="card p-4">
             <p className="text-sm font-bold text-gray-700 mb-3">取引履歴</p>
-            <div className="space-y-2">
-              {transactions.map(tx => (
-                <div key={tx.id} className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm ${tx.type === 'earn' ? 'bg-green-100' : 'bg-red-100'}`}>
-                    {tx.type === 'earn' ? '📥' : '📤'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-700 truncate">{tx.label}</p>
-                    <p className="text-[10px] text-gray-400">{tx.date}</p>
-                  </div>
-                  <span className={`text-sm font-bold ${tx.type === 'earn' ? 'text-green-600' : 'text-red-500'}`}>
-                    {tx.amount > 0 ? '+' : ''}{tx.amount}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {txLoading ? (
+              <SkeletonCard lines={4} />
+            ) : (
+              <div className="space-y-2">
+                {transactions.map(tx => {
+                  const isEarn = tx.type === 'earn' || Number(tx.amount) > 0
+                  return (
+                    <div key={tx.id} className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm ${isEarn ? 'bg-green-100' : 'bg-red-100'}`}>
+                        {isEarn ? '📥' : '📤'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-700 truncate">{tx.label ?? tx.description}</p>
+                        <p className="text-[10px] text-gray-400">{tx.date ?? tx.created_at}</p>
+                      </div>
+                      <span className={`text-sm font-bold ${isEarn ? 'text-green-600' : 'text-red-500'}`}>
+                        {Number(tx.amount) > 0 ? '+' : ''}{tx.amount}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* Settings menu */}

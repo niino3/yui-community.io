@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { MapPin, Calendar, Clock, ChevronRight, CheckCircle } from 'lucide-react'
+import { MapPin, Calendar, ChevronRight, CheckCircle } from 'lucide-react'
 import Header from '../components/Header'
+import { useAuth } from '../context/AuthContext'
+import { useTaskDetail, useAssignTask } from '../hooks/useTasks'
+import { SkeletonCard } from '../components/Skeleton'
 import { tasks } from '../data/mockData'
 
 const categoryLabelsMap = { people_care: 'お手伝い', earth_care: 'Earth Care' }
@@ -9,7 +12,13 @@ export default function TaskDetail({ goBack, navigate, params }) {
   const [applied, setApplied] = useState(false)
   const [showApplicants, setShowApplicants] = useState(false)
 
-  const rawTask = params?.task ?? tasks.find(t => t.id === params?.taskId) ?? tasks[0]
+  const { isAuthenticated } = useAuth()
+  const { data: apiTask, isLoading } = useTaskDetail(
+    isAuthenticated && !params?.task ? params?.taskId : null
+  )
+  const assignMutation = useAssignTask()
+
+  const rawTask = apiTask?.data ?? params?.task ?? tasks.find(t => t.id === params?.taskId) ?? tasks[0]
   const task = {
     ...rawTask,
     dateLabel: rawTask.dateLabel ?? (rawTask.created_at ? new Date(rawTask.created_at).toLocaleDateString('ja-JP') : '募集中'),
@@ -18,10 +27,26 @@ export default function TaskDetail({ goBack, navigate, params }) {
     reviews: rawTask.reviews ?? [],
     applicants: rawTask.applicants ?? [],
   }
-  const isRequester = false // mock: viewing as worker
 
-  function handleApply() {
+  async function handleApply() {
+    if (isAuthenticated) {
+      try {
+        await assignMutation.mutateAsync(task.id)
+      } catch { /* proceed with mock flow */ }
+    }
     setApplied(true)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="screen">
+        <Header title="依頼の詳細" onBack={goBack} />
+        <div className="p-4 space-y-3">
+          <SkeletonCard lines={4} />
+          <SkeletonCard lines={3} />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -119,7 +144,7 @@ export default function TaskDetail({ goBack, navigate, params }) {
             </div>
           )}
 
-          {/* Applicants (requester view) */}
+          {/* Applicants */}
           {task.applicants.length > 0 && (
             <div className="card p-4">
               <button
@@ -163,7 +188,7 @@ export default function TaskDetail({ goBack, navigate, params }) {
       </div>
 
       {/* Apply button */}
-      {!isRequester && task.status === 'open' && (
+      {task.status === 'open' && (
         <div className="flex-shrink-0 p-4 bg-[#faf8f4] border-t border-gray-100">
           {applied ? (
             <div className="flex items-center justify-center gap-2 py-4 bg-primary-50 rounded-2xl border border-primary-200">
@@ -171,8 +196,12 @@ export default function TaskDetail({ goBack, navigate, params }) {
               <span className="text-sm font-bold text-primary-600">応募しました！承認をお待ちください</span>
             </div>
           ) : (
-            <button onClick={handleApply} className="btn-primary">
-              応募する — {task.token_reward ?? task.reward} TOKEN もらえます
+            <button
+              onClick={handleApply}
+              disabled={assignMutation.isPending}
+              className="btn-primary"
+            >
+              {assignMutation.isPending ? '応募中...' : `応募する — ${task.token_reward ?? task.reward} TOKEN もらえます`}
             </button>
           )}
         </div>

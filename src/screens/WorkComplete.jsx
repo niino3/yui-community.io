@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Camera, QrCode, CheckCircle } from 'lucide-react'
+import { Camera, CheckCircle } from 'lucide-react'
 import Header from '../components/Header'
+import { useAuth } from '../context/AuthContext'
+import { useCompleteTask } from '../hooks/useTasks'
 
 const steps = ['写真撮影', 'QRスキャン', '完了']
 
@@ -10,19 +12,31 @@ export default function WorkComplete({ goBack, params }) {
   const [qrScanned, setQrScanned] = useState(false)
   const [sent, setSent] = useState(false)
 
+  const { isAuthenticated } = useAuth()
+  const completeMutation = useCompleteTask()
+
   const task = params?.task || {
     title: '田中よし子さんの畑の草取り',
     reward: 30,
+    token_reward: 30,
     requester: { name: '田中 よし子', avatar: '👩‍🌾' },
   }
+
+  const reward = task.token_reward ?? task.reward
+  const requesterName = task.requester?.display_name ?? task.requester?.name ?? '依頼者'
 
   function handlePhoto() {
     setPhotoTaken(true)
     setTimeout(() => setStep(1), 800)
   }
 
-  function handleQR() {
+  async function handleQR() {
     setQrScanned(true)
+    if (isAuthenticated) {
+      try {
+        await completeMutation.mutateAsync(task.id)
+      } catch { /* proceed with mock flow */ }
+    }
     setTimeout(() => setSent(true), 800)
   }
 
@@ -36,8 +50,8 @@ export default function WorkComplete({ goBack, params }) {
           </div>
           <h2 className="text-xl font-black text-gray-800 mb-2">完了報告を送りました！</h2>
           <p className="text-sm text-gray-500">
-            {task.requester.name}さんの承認をお待ちください。
-            承認されると <span className="font-bold text-token-600">{task.reward} TOKEN</span> が届きます。
+            {requesterName}さんの承認をお待ちください。
+            承認されると <span className="font-bold text-token-600">{reward} TOKEN</span> が届きます。
           </p>
         </div>
       </div>
@@ -70,12 +84,12 @@ export default function WorkComplete({ goBack, params }) {
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {/* Task info */}
         <div className="card p-4 mb-4 flex items-center gap-3">
-          <span className="text-3xl">{task.requester.avatar}</span>
+          <span className="text-3xl">{task.requester?.avatar ?? '👤'}</span>
           <div>
             <p className="text-xs text-gray-500">対象タスク</p>
             <p className="text-sm font-bold text-gray-800">{task.title}</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-lg font-black text-token-600">+{task.reward}</span>
+              <span className="text-lg font-black text-token-600">+{reward}</span>
               <span className="text-xs text-token-500">TOKEN</span>
             </div>
           </div>
@@ -111,7 +125,7 @@ export default function WorkComplete({ goBack, params }) {
         {step === 1 && (
           <div className="space-y-3">
             <p className="text-sm font-bold text-gray-700 text-center">
-              {task.requester.name}さんのスマホに<br />表示されたQRをスキャンしてください
+              {requesterName}さんのスマホに<br />表示されたQRをスキャンしてください
             </p>
 
             {qrScanned ? (
@@ -126,7 +140,6 @@ export default function WorkComplete({ goBack, params }) {
                 onClick={handleQR}
                 className="w-full h-48 bg-gray-900 rounded-2xl flex flex-col items-center justify-center gap-3 active:bg-gray-800 transition-colors relative overflow-hidden"
               >
-                {/* QR scanner overlay */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-32 h-32 border-2 border-white rounded-lg relative">
                     <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-primary-400 rounded-tl-md" />

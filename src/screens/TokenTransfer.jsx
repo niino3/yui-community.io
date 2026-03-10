@@ -4,6 +4,7 @@ import { isAddress } from 'viem'
 import Header from '../components/Header'
 import { useYuiBalance, useYuiTransfer } from '../web3/useYuiToken'
 import { Send, CheckCircle, AlertCircle } from 'lucide-react'
+import { EXPLORER_URL } from '../contracts/addresses'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../api/client'
 
@@ -45,7 +46,7 @@ export default function TokenTransfer({ goBack }) {
             {amount} YUI を送金しました
           </p>
           <a
-            href={`https://amoy.polygonscan.com/tx/${hash}`}
+            href={`${EXPLORER_URL}/tx/${hash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-primary-600 underline mb-6"

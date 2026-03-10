@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
-import { polygonAmoy } from 'wagmi/chains'
+import { polygon, polygonAmoy } from 'wagmi/chains'
 import { Wallet, LogOut, ExternalLink, AlertTriangle } from 'lucide-react'
+import { EXPLORER_URL, CHAIN_ID } from '../contracts/addresses'
+
+const targetChain = CHAIN_ID === 137 ? polygon : polygonAmoy
 
 const FAUCET_URL = 'https://faucet.polygon.technology/'
 
@@ -12,7 +15,7 @@ export default function WalletConnect({ compact = false }) {
   const { switchChain } = useSwitchChain()
   const [showNoWallet, setShowNoWallet] = useState(false)
 
-  const isWrongNetwork = isConnected && chain?.id !== polygonAmoy.id
+  const isWrongNetwork = isConnected && chain?.id !== targetChain.id
 
   function handleConnect() {
     if (!window.ethereum) {
@@ -29,7 +32,7 @@ export default function WalletConnect({ compact = false }) {
     if (compact) {
       return (
         <button
-          onClick={() => isWrongNetwork ? switchChain({ chainId: polygonAmoy.id }) : disconnect()}
+          onClick={() => isWrongNetwork ? switchChain({ chainId: targetChain.id }) : disconnect()}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
             isWrongNetwork ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'
           }`}
@@ -47,12 +50,12 @@ export default function WalletConnect({ compact = false }) {
             <AlertTriangle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-bold text-yellow-800">ネットワークが違います</p>
-              <p className="text-xs text-yellow-700 mt-0.5">Polygon Amoy テストネットに切り替えてください</p>
+              <p className="text-xs text-yellow-700 mt-0.5">{targetChain.name} に切り替えてください</p>
               <button
-                onClick={() => switchChain({ chainId: polygonAmoy.id })}
+                onClick={() => switchChain({ chainId: targetChain.id })}
                 className="mt-2 text-xs font-bold text-white bg-yellow-600 rounded-lg px-3 py-1.5"
               >
-                Polygon Amoy に切り替え
+                {targetChain.name} に切り替え
               </button>
             </div>
           </div>
@@ -76,7 +79,7 @@ export default function WalletConnect({ compact = false }) {
         )}
         <div className="flex gap-2">
           <a
-            href={`https://amoy.polygonscan.com/address/${address}`}
+            href={`${EXPLORER_URL}/address/${address}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-1 text-xs text-primary-600 bg-primary-50 rounded-xl py-2"
