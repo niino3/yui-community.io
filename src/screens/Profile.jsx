@@ -129,6 +129,21 @@ export default function Profile({ navigate }) {
             <ChevronRight size={18} className="text-gray-400" />
           </button>
 
+          {/* Tenant admin */}
+          <button
+            onClick={() => navigate('tenant-admin')}
+            className="card w-full p-4 flex items-center gap-3 active:bg-gray-50"
+          >
+            <div className="w-10 h-10 bg-purple-100 rounded-2xl flex items-center justify-center">
+              <span className="text-xl">⚙️</span>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-bold text-gray-800">コミュニティ管理</p>
+              <p className="text-xs text-gray-500">メンバー・設定・権限管理</p>
+            </div>
+            <ChevronRight size={18} className="text-gray-400" />
+          </button>
+
           {/* Transaction history */}
           <div className="card p-4">
             <p className="text-sm font-bold text-gray-700 mb-3">取引履歴</p>

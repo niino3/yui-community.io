@@ -1,8 +1,8 @@
 # 運用マニュアル — パーマカルチャー教室向け
 
 **対象**: コミュニティ運営者（operator / admin）  
-**バージョン**: v0.1.0（テスト運用版）  
-**最終更新**: 2026-03-10
+**バージョン**: v0.2.0（テスト運用版）  
+**最終更新**: 2026-03-12
 
 ---
 
@@ -219,7 +219,70 @@ https://github.com/（リポジトリURL）/issues
 
 ---
 
-## 9. テスト運用チェックリスト
+## 9. ローカル開発環境のセットアップ
+
+### 9.1 前提条件
+
+| ソフトウェア | 用途 |
+|-------------|------|
+| Node.js 18+ | フロントエンド開発 |
+| Docker Desktop | バックエンド（Laravel + PostgreSQL + Redis） |
+| Git | バージョン管理 |
+
+### 9.2 バックエンド起動
+
+```bash
+cd backend
+docker-compose up
+```
+
+4つのコンテナが起動します:
+- `yui-app` — PHP-FPM（Laravel）
+- `yui-nginx` — Nginx（ポート 8080）
+- `yui-db` — PostgreSQL
+- `yui-redis` — Redis
+
+初回のみマイグレーションを実行:
+```bash
+docker-compose exec app php artisan migrate
+```
+
+### 9.3 フロントエンド起動
+
+```bash
+# プロジェクトルートで
+npm install
+npm run dev
+```
+
+`.env` ファイルでバックエンド接続先を設定:
+```
+VITE_API_URL=http://localhost:8080
+```
+
+### 9.4 3つのサイトへのアクセス
+
+| サイト | URL | アクター |
+|--------|-----|---------|
+| Site 1: Platform Admin | `http://localhost:5173/` | Service Owner |
+| Site 2: Community Admin | `http://localhost:5173/?community={slug}&admin=true` | Community Owner |
+| Site 3: Community App | `http://localhost:5173/?community={slug}` | Community Member |
+
+例: `test-farm` コミュニティの場合:
+- 管理画面: `http://localhost:5173/?community=test-farm&admin=true`
+- アプリ: `http://localhost:5173/?community=test-farm`
+
+### 9.5 CORS 設定
+
+フロントエンドのポートが変わった場合（例: 5174）、`backend/config/cors.php` の `allowed_origins` に追加してください:
+
+```bash
+docker-compose exec app php artisan config:clear
+```
+
+---
+
+## 10. テスト運用チェックリスト
 
 運営者は以下を確認してからテスト運用を開始してください。
 

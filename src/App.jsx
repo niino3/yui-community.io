@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useCommunity } from './context/CommunityContext'
 import BottomNav from './components/BottomNav'
 import ScreenTransition from './components/ScreenTransition'
 import Onboarding from './screens/Onboarding'
@@ -15,15 +16,22 @@ import EquipmentDetail from './screens/EquipmentDetail'
 import EarthCare from './screens/EarthCare'
 import AdminDashboard from './screens/AdminDashboard'
 import TokenTransfer from './screens/TokenTransfer'
+import TenantAdmin from './screens/TenantAdmin'
+import LandingPage from './screens/LandingPage'
 
 const TAB_SCREENS = ['home', 'tasks', 'qr', 'equipment', 'profile']
 
 export default function App() {
-  const [screen, setScreen] = useState('onboarding')
+  const { community, loading, slug } = useCommunity()
+  const isAdminMode = new URLSearchParams(window.location.search).get('admin') === 'true'
+  const [screen, setScreen] = useState(isAdminMode ? 'tenant-admin' : 'onboarding')
   const [stack, setStack] = useState([])
   const [params, setParams] = useState({})
   const [activeTab, setActiveTab] = useState('home')
   const [direction, setDirection] = useState('push')
+
+  // ランディングページを表示するかどうかを判定
+  const showLandingPage = !loading && !slug && !community
 
   function navigate(nextScreen, nextParams = {}) {
     setDirection('push')
@@ -74,11 +82,35 @@ export default function App() {
       case 'equipment-detail': return <EquipmentDetail {...navProps} params={params} />
       case 'earth-care': return <EarthCare {...navProps} />
       case 'admin': return <AdminDashboard {...navProps} />
+      case 'tenant-admin': return <TenantAdmin {...navProps} />
       case 'token-transfer': return <TokenTransfer {...navProps} />
       default: return <Home {...navProps} />
     }
   }
 
+  // ランディングページを表示（コミュニティが指定されていない場合）
+  if (showLandingPage) {
+    return <LandingPage />
+  }
+
+  // コミュニティロード中
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-primary-700 font-medium">コミュニティを読み込み中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Site 2: Community Admin（admin=true でフルページ表示）
+  if (isAdminMode && community) {
+    return <TenantAdmin goBack={() => { window.location.href = '/' }} />
+  }
+
+  // Site 3: モバイルアプリビュー（コミュニティが指定されている場合）
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       {/* Phone frame */}
@@ -114,7 +146,9 @@ export default function App() {
 
       {/* Side hint */}
       <div className="ml-8 text-gray-400 text-sm max-w-xs hidden lg:block">
-        <p className="font-semibold text-gray-600 mb-3">yui UIプロトタイプ</p>
+        <p className="font-semibold text-gray-600 mb-3">
+          {community ? `${community.name} (${community.slug})` : 'yui UIプロトタイプ'}
+        </p>
         <p className="mb-2">地域コミュニティトークンアプリ</p>
         <p className="text-xs text-gray-400">※ 認証後は実 API に接続されます</p>
       </div>

@@ -13,11 +13,15 @@ export default {
           200: '#bce0ce',
           300: '#90c9ad',
           400: '#5fac87',
-          500: '#3d7a55',
+          500: 'var(--color-primary, #3d7a55)', // CSS変数から動的に取得
           600: '#2e6344',
           700: '#275238',
           800: '#21422e',
           900: '#1c3626',
+          DEFAULT: 'var(--color-primary, #3d7a55)',
+        },
+        secondary: {
+          DEFAULT: 'var(--color-secondary, #6b9080)',
         },
         token: {
           50: '#fef9ee',

@@ -51,7 +51,7 @@ class PlatformController extends Controller
 
         $community = Community::create(array_merge(
             $validator->validated(),
-            ['created_by' => $request->user()->id]
+            ['created_by' => $request->user()?->id]
         ));
 
         return response()->json($community, 201);

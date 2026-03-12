@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* デフォルトカラー（コミュニティがロードされる前に使用） */
+    --color-primary: #8b7355;
+    --color-secondary: #6b9080;
+  }
+
   * {
     -webkit-tap-highlight-color: transparent;
   }

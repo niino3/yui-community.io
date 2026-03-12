@@ -4,13 +4,16 @@ import './index.css'
 import App from './App.jsx'
 import Web3Provider from './web3/Web3Provider'
 import { AuthProvider } from './context/AuthContext'
+import { CommunityProvider } from './context/CommunityContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <Web3Provider>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </Web3Provider>
+    <CommunityProvider>
+      <Web3Provider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </Web3Provider>
+    </CommunityProvider>
   </StrictMode>,
 )

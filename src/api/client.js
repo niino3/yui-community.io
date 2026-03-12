@@ -4,6 +4,9 @@
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://yui-communityio-production.up.railway.app'
 
+// マルチテナント対応：現在のコミュニティスラグを保持
+let currentCommunitySlug = null
+
 function getToken() {
   return localStorage.getItem('yui_api_token')
 }
@@ -53,6 +56,10 @@ async function request(path, options = {}) {
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }
+  // マルチテナント対応：X-Community-Slug ヘッダーを追加
+  if (currentCommunitySlug) {
+    headers['X-Community-Slug'] = currentCommunitySlug
+  }
   const res = await fetch(url, { ...options, headers })
   if (res.status === 401) {
     clearAuth()
@@ -79,6 +86,12 @@ export const api = {
   post: (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) }),
   patch: (path, body) => request(path, { method: 'PATCH', body: JSON.stringify(body) }),
 
+  // マルチテナント対応：コミュニティスラグの設定・取得
+  setCommunitySlug: (slug) => {
+    currentCommunitySlug = slug
+  },
+  getCommunitySlug: () => currentCommunitySlug,
+
   auth: {
     nonce: (walletAddress) => api.post('/auth/nonce', { wallet_address: walletAddress }),
     wallet: (walletAddress, message, signature) =>
@@ -90,6 +103,26 @@ export const api = {
   },
   communities: {
     list: () => api.get('/communities'),
+    current: () => api.get('/communities/current'),
+  },
+  platform: {
+    communities: {
+      list: () => api.get('/platform/communities'),
+      get: (id) => api.get(`/platform/communities/${id}`),
+      create: (data) => api.post('/platform/communities', data),
+      update: (id, data) => api.patch(`/platform/communities/${id}`, data),
+      delete: (id) => {
+        return fetch(`${import.meta.env.VITE_API_URL || 'https://yui-communityio-production.up.railway.app'}/api/platform/communities/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('yui_api_token')}`,
+          },
+        }).then(res => res.json())
+      },
+    },
+    stats: () => api.get('/platform/stats'),
   },
   tasks: {
     list: (params) => {
